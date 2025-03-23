@@ -3,17 +3,28 @@ import React, { useEffect } from "react";
 import { useKnowledge } from "@/context/KnowledgeContext";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
-import { ClipboardCopy, FileText, ArrowRight } from "lucide-react";
+import { ClipboardCopy, FileText, ArrowRight, Save } from "lucide-react";
+import { useToast } from "@/components/ui/use-toast";
 
 const TextInput: React.FC = () => {
-  const { inputText, setInputText, extractKnowledgePoints, isLoading } = useKnowledge();
+  const { inputText, setInputText, extractKnowledgePoints, isLoading, saveKnowledgeBase, knowledgePoints } = useKnowledge();
+  const { toast } = useToast();
 
   const handlePaste = async () => {
     try {
       const text = await navigator.clipboard.readText();
       setInputText(text);
+      toast({
+        title: "Text Pasted",
+        description: "Content pasted from clipboard",
+      });
     } catch (err) {
       console.error("Failed to read clipboard contents: ", err);
+      toast({
+        title: "Paste Failed",
+        description: "Could not access clipboard",
+        variant: "destructive",
+      });
     }
   };
 
@@ -21,7 +32,31 @@ const TextInput: React.FC = () => {
     e.preventDefault();
     if (inputText.trim().length >= 10) {
       extractKnowledgePoints();
+    } else {
+      toast({
+        title: "Text Too Short",
+        description: "Please enter at least 10 characters",
+        variant: "destructive",
+      });
     }
+  };
+
+  const handleSaveKnowledgeBase = () => {
+    if (knowledgePoints.length === 0) {
+      toast({
+        title: "Nothing to Save",
+        description: "Extract knowledge points first",
+        variant: "destructive",
+      });
+      return;
+    }
+    
+    saveKnowledgeBase();
+    
+    toast({
+      title: "Saved to Knowledge Base",
+      description: "Your knowledge points have been saved",
+    });
   };
 
   return (
@@ -55,23 +90,37 @@ const TextInput: React.FC = () => {
           <FileText className="absolute right-3 bottom-3 h-4 w-4 text-gray-400" />
         </div>
         
-        <Button 
-          type="submit" 
-          className="w-full desktop-primary-button"
-          disabled={!inputText.trim() || inputText.trim().length < 10 || isLoading}
-        >
-          {isLoading ? (
-            <div className="flex items-center gap-2">
-              <div className="h-4 w-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
-              <span>Processing...</span>
-            </div>
-          ) : (
-            <>
-              <span>Extract Knowledge Points</span>
-              <ArrowRight className="h-4 w-4" />
-            </>
+        <div className="flex gap-3">
+          <Button 
+            type="submit" 
+            className="flex-1 desktop-primary-button"
+            disabled={!inputText.trim() || inputText.trim().length < 10 || isLoading}
+          >
+            {isLoading ? (
+              <div className="flex items-center gap-2">
+                <div className="h-4 w-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                <span>Processing...</span>
+              </div>
+            ) : (
+              <>
+                <span>Extract Knowledge Points</span>
+                <ArrowRight className="h-4 w-4" />
+              </>
+            )}
+          </Button>
+          
+          {knowledgePoints.length > 0 && (
+            <Button 
+              type="button"
+              variant="secondary"
+              onClick={handleSaveKnowledgeBase}
+              className="desktop-button"
+            >
+              <Save className="h-4 w-4" />
+              <span>Save to KB</span>
+            </Button>
           )}
-        </Button>
+        </div>
       </form>
     </div>
   );

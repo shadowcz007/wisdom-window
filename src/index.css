@@ -1,4 +1,3 @@
-
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
 @import url('https://fonts.googleapis.com/css2?family=Segoe+UI:wght@400;500;600&display=swap');
 
@@ -104,6 +103,18 @@
     border: 1px solid #e0e0e0;
     height: calc(100vh - 3rem);
     font-family: 'Segoe UI', 'Inter', sans-serif;
+    transition: transform 0.3s ease, opacity 0.3s ease;
+  }
+
+  .desktop-app.maximized {
+    @apply fixed inset-0 rounded-none z-50;
+    height: 100vh;
+  }
+
+  .desktop-app.minimized {
+    transform: scale(0.8);
+    opacity: 0;
+    pointer-events: none;
   }
 
   .desktop-background {
@@ -114,6 +125,7 @@
   .window-titlebar {
     @apply flex items-center justify-between px-4 py-2 bg-gray-100 border-b border-gray-200;
     height: 36px;
+    user-select: none;
   }
 
   .window-title {
@@ -133,11 +145,13 @@
   }
 
   .window-menubar {
-    @apply flex items-center space-x-6 px-3 py-1 bg-gray-50 border-b border-gray-200 text-xs;
+    @apply flex items-start space-x-1 px-1 py-0 bg-gray-50 border-b border-gray-200 text-xs;
+    height: 28px;
   }
 
   .menu-item {
     @apply px-2 py-1 text-gray-700 hover:bg-gray-200 rounded cursor-pointer transition-colors;
+    height: 24px;
   }
 
   .window-content {
@@ -146,6 +160,7 @@
 
   .window-statusbar {
     @apply flex items-center justify-between px-3 py-1 bg-gray-100 border-t border-gray-200 text-xs text-gray-600;
+    height: 24px;
   }
 
   .status-item {
