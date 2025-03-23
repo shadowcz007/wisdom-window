@@ -50,9 +50,9 @@ const TextInput: React.FC = () => {
       });
       return;
     }
-    
+
     saveKnowledgeBase();
-    
+
     toast({
       title: "Saved to Knowledge Base",
       description: "Your knowledge points have been saved",
@@ -68,9 +68,9 @@ const TextInput: React.FC = () => {
           </span>
           <h3 className="text-base font-medium">Input Text</h3>
         </div>
-        <Button 
-          variant="secondary" 
-          size="sm" 
+        <Button
+          variant="secondary"
+          size="sm"
           onClick={handlePaste}
           className="desktop-button group"
         >
@@ -78,7 +78,7 @@ const TextInput: React.FC = () => {
           <span>Paste</span>
         </Button>
       </div>
-      
+
       <form onSubmit={handleSubmit} className="space-y-4">
         <div className="relative desktop-input-container">
           <Textarea
@@ -89,12 +89,12 @@ const TextInput: React.FC = () => {
           />
           <FileText className="absolute right-3 bottom-3 h-4 w-4 text-gray-400" />
         </div>
-        
+
         <div className="flex gap-3">
-          <Button 
-            type="submit" 
+          <Button
+            type="submit"
             className="flex-1 desktop-primary-button"
-            disabled={!inputText.trim() || inputText.trim().length < 10 || isLoading}
+            disabled={!inputText.trim() || inputText.trim().length < 2 || isLoading}
           >
             {isLoading ? (
               <div className="flex items-center gap-2">
@@ -108,9 +108,9 @@ const TextInput: React.FC = () => {
               </>
             )}
           </Button>
-          
+
           {knowledgePoints.length > 0 && (
-            <Button 
+            <Button
               type="button"
               variant="secondary"
               onClick={handleSaveKnowledgeBase}

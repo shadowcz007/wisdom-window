@@ -18,6 +18,14 @@ type ChatMessage = {
   timestamp: string;
 };
 
+// 添加新的类型定义
+type LLMMessage = {
+  role: 'system' | 'user' | 'assistant';
+  content: string;
+};
+
+type ModelType = 'THUDM/glm-4-9b-chat' | 'deepseek-ai/DeepSeek-V3';
+
 interface KnowledgeContextType {
   inputText: string;
   setInputText: (text: string) => void;
@@ -33,6 +41,7 @@ interface KnowledgeContextType {
   isLoading: boolean;
   activeTab: 'input' | 'saved';
   setActiveTab: (tab: 'input' | 'saved') => void;
+  saveKnowledgeBase: () => void;
 }
 
 const initialKnowledgeContext: KnowledgeContextType = {
@@ -49,7 +58,8 @@ const initialKnowledgeContext: KnowledgeContextType = {
   extractKnowledgePoints: () => { },
   isLoading: false,
   activeTab: 'input',
-  setActiveTab: () => { }
+  setActiveTab: () => { },
+  saveKnowledgeBase: () => { }
 };
 
 const KnowledgeContext = createContext<KnowledgeContextType>(initialKnowledgeContext);
@@ -79,6 +89,32 @@ const SYSTEM_PROMPT = `你是一个专业的知识点提取助手。你的任务
 - 每个字段都必须是字符串类型
 - 至少返回1个知识点，最多返回5个知识点
 - 确保返回的是合法的JSON格式`;
+
+// 添加新的工具函数
+const callLLMAPI = async (
+  model: ModelType,
+  messages: LLMMessage[],
+  options?: {
+    temperature?: number;
+    max_tokens?: number;
+    response_format?: { type: string };
+  }
+) => {
+  const response = await fetch('https://api.siliconflow.cn/v1/chat/completions', {
+    method: 'POST',
+    headers: {
+      'Authorization': `Bearer <api_key>`,
+      'Content-Type': 'application/json'
+    },
+    body: JSON.stringify({
+      model,
+      messages,
+      ...options
+    })
+  });
+
+  return await response.json();
+};
 
 export const KnowledgeProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [inputText, setInputText] = useState<string>('');
@@ -142,8 +178,11 @@ export const KnowledgeProvider: React.FC<{ children: React.ReactNode }> = ({ chi
       }));
 
       // 准备消息时确保内容格式正确
-      const messages = [
-        { role: 'system', content: '你需要判断使用哪些记忆库的工具，帮我选择适合的，并生成对应的参数' },
+      const messages: LLMMessage[] = [
+        { 
+          role: 'system', 
+          content: '你需要判断使用哪些记忆库的工具，帮我选择适合的，并生成对应的参数' 
+        },
         {
           role: 'user',
           content: JSON.stringify({
@@ -152,21 +191,7 @@ export const KnowledgeProvider: React.FC<{ children: React.ReactNode }> = ({ chi
         }
       ];
 
-      // 调用 API
-      const response = await fetch('https://api.siliconflow.cn/v1/chat/completions', {
-        method: 'POST',
-        headers: {
-          Authorization: `Bearer <api_key>`,
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({
-          model: 'deepseek-ai/DeepSeek-V3',
-          tools,
-          messages,
-        })
-      });
-
-      const result = await response.json();
+      const result = await callLLMAPI('deepseek-ai/DeepSeek-V3', messages);
       const toolCall = result.choices[0].message.tool_calls?.[0];
 
       if (toolCall) {
@@ -256,35 +281,25 @@ export const KnowledgeProvider: React.FC<{ children: React.ReactNode }> = ({ chi
 
   const extractKnowledgePoints = async () => {
     if (!inputText.trim()) return;
-
     setIsLoading(true);
 
     try {
-      const response = await fetch('https://api.siliconflow.cn/v1/chat/completions', {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer <api_key>`,
-          'Content-Type': 'application/json'
+      const messages: LLMMessage[] = [
+        {
+          role: "system",
+          content: SYSTEM_PROMPT
         },
-        body: JSON.stringify({
-          model: "THUDM/glm-4-9b-chat",
-          messages: [
-            {
-              role: "system",
-              content: SYSTEM_PROMPT
-            },
-            {
-              role: "user",
-              content: inputText
-            }
-          ],
-          temperature: 0.7,
-          max_tokens: 2000,
-          response_format: { type: "json_object" }
-        })
-      });
+        {
+          role: "user",
+          content: inputText
+        }
+      ];
 
-      const data = await response.json();
+      const data = await callLLMAPI('THUDM/glm-4-9b-chat', messages, {
+        temperature: 0.7,
+        max_tokens: 2000,
+        response_format: { type: "json_object" }
+      });
 
       // 检查API响应格式
       if (!data.choices?.[0]?.message?.content) {
@@ -382,7 +397,8 @@ export const KnowledgeProvider: React.FC<{ children: React.ReactNode }> = ({ chi
         extractKnowledgePoints,
         isLoading,
         activeTab,
-        setActiveTab
+        setActiveTab,
+        saveKnowledgeBase: () => { }
       }}
     >
       {children}
