@@ -1,4 +1,5 @@
 import React, { createContext, useContext, useState, useEffect } from "react";
+import { experimental_createMCPClient as createMCPClient } from "ai";
 
 type KnowledgePoint = {
   id: string;
@@ -114,17 +115,104 @@ export const KnowledgeProvider: React.FC<{ children: React.ReactNode }> = ({ chi
     }
   }, [chatMessages]);
 
-  const savePoint = (point: KnowledgePoint) => {
+  const savePoint = async (point: KnowledgePoint) => {
     const pointToSave = {
       ...point,
       saved: true,
       timestamp: new Date().toISOString()
     };
 
-    // Check if point already exists
-    const exists = savedPoints.some(p => p.id === point.id);
-    if (!exists) {
-      setSavedPoints(prev => [...prev, pointToSave]);
+    try {
+      const sseMCPClient = await createMCPClient({
+        transport: {
+          type: "sse",
+          url: "http://127.0.0.1:8090"
+        }
+      });
+
+      // 获取远程工具
+      const remoteTools: any = await sseMCPClient.tools();
+      const tools = Object.entries(remoteTools).map(([name, tool]: any) => ({
+        type: 'function',
+        function: {
+          name,
+          description: tool.description,
+          parameters: tool.parameters
+        }
+      }));
+
+      // 准备消息时确保内容格式正确
+      const messages = [
+        { role: 'system', content: '你需要判断使用哪些记忆库的工具，帮我选择适合的，并生成对应的参数' },
+        {
+          role: 'user',
+          content: JSON.stringify({
+            text: `${pointToSave.content}\n\n${pointToSave.description}`
+          })
+        }
+      ];
+
+      // 调用 API
+      const response = await fetch('https://api.siliconflow.cn/v1/chat/completions', {
+        method: 'POST',
+        headers: {
+          Authorization: `Bearer sk-hhnbgdfqdvuhmlamexjqegkvxldwsuzvuoggynitmujhmyco`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          model: 'deepseek-ai/DeepSeek-V3',
+          tools,
+          messages,
+        })
+      });
+
+      const result = await response.json();
+      const toolCall = result.choices[0].message.tool_calls?.[0];
+
+      if (toolCall) {
+        console.log('Knowledge point saved to MCP:', pointToSave, toolCall);
+
+
+        let toolName = toolCall.function.name;
+        let args;
+        try {
+          // 尝试解析JSON字符串
+          args = JSON.parse(toolCall.function.arguments);
+        } catch (error) {
+          // 如果解析失败，尝试修复常见的JSON格式问题
+          const cleanedJson = toolCall.function.arguments
+            .replace(/[\u0000-\u001F\u007F-\u009F]/g, '') // 移除控制字符
+            .replace(/\n/g, '\\n') // 处理换行符
+            .replace(/,\s*([\]}])/g, '$1') // 移除尾随逗号
+            .replace(/([{,]\s*)(\w+)(\s*:)/g, '$1"$2"$3'); // 为未加引号的键名添加引号
+
+          try {
+            args = JSON.parse(cleanedJson);
+          } catch (secondError) {
+            console.error('Failed to parse tool arguments:', secondError);
+            throw new Error('无法解析工具参数');
+          }
+        }
+
+        console.log('args:', args);
+        let toolResult = await remoteTools[toolName].execute(args);
+        console.log('#保存成功', toolResult);
+
+      }
+
+      // 检查是否已存在
+      const exists = savedPoints.some(p => p.id === point.id);
+      if (!exists) {
+        setSavedPoints(prev => [...prev, pointToSave]);
+      }
+
+    } catch (error) {
+      console.error('Error saving to MCP:', error);
+      // 即使 MCP 保存失败，仍然保存到本地
+      const exists = savedPoints.some(p => p.id === point.id);
+      if (!exists) {
+        setSavedPoints(prev => [...prev, pointToSave]);
+      }
     }
   };
 
@@ -168,9 +256,9 @@ export const KnowledgeProvider: React.FC<{ children: React.ReactNode }> = ({ chi
 
   const extractKnowledgePoints = async () => {
     if (!inputText.trim()) return;
-    
+
     setIsLoading(true);
-    
+
     try {
       const response = await fetch('https://api.siliconflow.cn/v1/chat/completions', {
         method: 'POST',
@@ -197,7 +285,7 @@ export const KnowledgeProvider: React.FC<{ children: React.ReactNode }> = ({ chi
       });
 
       const data = await response.json();
-      
+
       // 检查API响应格式
       if (!data.choices?.[0]?.message?.content) {
         throw new Error('Invalid API response format');
@@ -216,7 +304,7 @@ export const KnowledgeProvider: React.FC<{ children: React.ReactNode }> = ({ chi
         // 如果JSON解析失败，尝试使用正则表达式提取知识点
         const contentStr = data.choices[0].message.content;
         const knowledgePointsMatch = contentStr.match(/"knowledge_points"\s*:\s*\[(.*?)\]/s);
-        
+
         if (knowledgePointsMatch) {
           try {
             llmResponse = {
@@ -236,7 +324,7 @@ export const KnowledgeProvider: React.FC<{ children: React.ReactNode }> = ({ chi
       }
 
       const extractedPoints: KnowledgePoint[] = llmResponse.knowledge_points
-        .filter((point: any) => 
+        .filter((point: any) =>
           typeof point.title === 'string' &&
           typeof point.content === 'string' &&
           typeof point.description === 'string'
@@ -262,7 +350,7 @@ export const KnowledgeProvider: React.FC<{ children: React.ReactNode }> = ({ chi
         .split(/[.!?]/)
         .map(s => s.trim())
         .filter(s => s.length > 10);
-      
+
       const fallbackPoints: KnowledgePoint[] = sentences.map((sentence, index) => ({
         id: `kp-${Date.now()}-${index}`,
         title: sentence.substring(0, Math.min(40, sentence.length)) + (sentence.length > 40 ? '...' : ''),
@@ -271,7 +359,7 @@ export const KnowledgeProvider: React.FC<{ children: React.ReactNode }> = ({ chi
         selected: false,
         saved: false
       }));
-      
+
       setKnowledgePoints(fallbackPoints);
     } finally {
       setIsLoading(false);
