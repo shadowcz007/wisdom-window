@@ -1,3 +1,4 @@
+
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
 @import url('https://fonts.googleapis.com/css2?family=Segoe+UI:wght@400;500;600&display=swap');
 
@@ -124,7 +125,7 @@
   }
 
   .window-control-btn {
-    @apply flex items-center justify-center rounded-sm h-5 w-5 text-gray-500 hover:bg-gray-200;
+    @apply flex items-center justify-center rounded-sm h-5 w-5 text-gray-500 hover:bg-gray-200 transition-colors;
   }
 
   .window-close {
@@ -136,7 +137,7 @@
   }
 
   .menu-item {
-    @apply px-2 py-1 text-gray-700 hover:bg-gray-200 rounded cursor-pointer;
+    @apply px-2 py-1 text-gray-700 hover:bg-gray-200 rounded cursor-pointer transition-colors;
   }
 
   .window-content {
@@ -168,7 +169,7 @@
   }
 
   .desktop-button {
-    @apply flex items-center gap-1 text-xs bg-gray-100 hover:bg-gray-200 border-gray-300;
+    @apply flex items-center gap-1 text-xs bg-gray-100 hover:bg-gray-200 border-gray-300 transition-colors;
   }
 
   .desktop-primary-button {
@@ -176,7 +177,7 @@
   }
 
   .desktop-input-container {
-    @apply border border-gray-300 rounded-md overflow-hidden focus-within:ring-1 focus-within:ring-blue-500 focus-within:border-blue-500;
+    @apply border border-gray-300 rounded-md overflow-hidden focus-within:ring-1 focus-within:ring-blue-500 focus-within:border-blue-500 transition-all;
   }
 
   .desktop-textarea {
@@ -188,11 +189,11 @@
   }
 
   .desktop-point-list {
-    @apply space-y-2;
+    @apply space-y-2 max-h-[600px] overflow-y-auto pr-2;
   }
 
   .desktop-point-item {
-    @apply p-3 rounded-md border border-gray-200 hover:border-blue-200 transition-all;
+    @apply p-3 rounded-md border border-gray-200 hover:border-blue-200 transition-all cursor-pointer;
   }
 
   .desktop-point-item.selected {

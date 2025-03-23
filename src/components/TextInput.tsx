@@ -1,5 +1,5 @@
 
-import React from "react";
+import React, { useEffect } from "react";
 import { useKnowledge } from "@/context/KnowledgeContext";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
@@ -19,7 +19,9 @@ const TextInput: React.FC = () => {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    extractKnowledgePoints();
+    if (inputText.trim().length >= 10) {
+      extractKnowledgePoints();
+    }
   };
 
   return (
@@ -35,7 +37,7 @@ const TextInput: React.FC = () => {
           variant="secondary" 
           size="sm" 
           onClick={handlePaste}
-          className="desktop-button"
+          className="desktop-button group"
         >
           <ClipboardCopy className="h-3.5 w-3.5" />
           <span>Paste</span>
@@ -56,7 +58,7 @@ const TextInput: React.FC = () => {
         <Button 
           type="submit" 
           className="w-full desktop-primary-button"
-          disabled={inputText.trim().length < 10 || isLoading}
+          disabled={!inputText.trim() || inputText.trim().length < 10 || isLoading}
         >
           {isLoading ? (
             <div className="flex items-center gap-2">

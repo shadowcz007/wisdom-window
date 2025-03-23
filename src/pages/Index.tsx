@@ -7,7 +7,7 @@ import KnowledgePointDetail from "@/components/KnowledgePointDetail";
 import KnowledgeBase from "@/components/KnowledgeBase";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card } from "@/components/ui/card";
-import { Book, BookOpen, Maximize2, Minimize2, X } from "lucide-react";
+import { Book, BookOpen, Maximize2, Minimize2, X, Menu } from "lucide-react";
 import { useKnowledge } from "@/context/KnowledgeContext";
 
 const KnowledgeApp: React.FC = () => {
@@ -36,7 +36,10 @@ const KnowledgeApp: React.FC = () => {
 
       {/* App Menu bar */}
       <div className="window-menubar">
-        <div className="menu-item">File</div>
+        <div className="menu-item flex items-center gap-1">
+          <Menu className="h-3 w-3" />
+          <span>File</span>
+        </div>
         <div className="menu-item">Edit</div>
         <div className="menu-item">View</div>
         <div className="menu-item">Help</div>
