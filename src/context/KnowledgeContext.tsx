@@ -156,7 +156,7 @@ export const KnowledgeProvider: React.FC<{ children: React.ReactNode }> = ({ chi
       const response = await fetch('https://api.siliconflow.cn/v1/chat/completions', {
         method: 'POST',
         headers: {
-          Authorization: `Bearer sk-hhnbgdfqdvuhmlamexjqegkvxldwsuzvuoggynitmujhmyco`,
+          Authorization: `Bearer <api_key>`,
           'Content-Type': 'application/json'
         },
         body: JSON.stringify({
@@ -263,7 +263,7 @@ export const KnowledgeProvider: React.FC<{ children: React.ReactNode }> = ({ chi
       const response = await fetch('https://api.siliconflow.cn/v1/chat/completions', {
         method: 'POST',
         headers: {
-          'Authorization': `Bearer sk-hhnbgdfqdvuhmlamexjqegkvxldwsuzvuoggynitmujhmyco`,
+          'Authorization': `Bearer <api_key>`,
           'Content-Type': 'application/json'
         },
         body: JSON.stringify({
