@@ -100,16 +100,15 @@ const callLLMAPI = async (
     response_format?: { type: string };
   }
 ) => {
-  const response = await fetch('https://api.siliconflow.cn/v1/chat/completions', {
+  const response = await fetch(`${import.meta.env.VITE_API_BASE_URL}/api/llm`, {
     method: 'POST',
     headers: {
-      'Authorization': `Bearer <api_key>`,
       'Content-Type': 'application/json'
     },
     body: JSON.stringify({
       model,
       messages,
-      ...options
+      options
     })
   });
 
