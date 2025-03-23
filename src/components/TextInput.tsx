@@ -30,12 +30,12 @@ const TextInput: React.FC = () => {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (inputText.trim().length >= 10) {
+    if (inputText.trim().length > 1) {
       extractKnowledgePoints();
     } else {
       toast({
         title: "Text Too Short",
-        description: "Please enter at least 10 characters",
+        description: "Please enter at least 2 characters",
         variant: "destructive",
       });
     }
